@@ -3,12 +3,22 @@ library(RColorBrewer);
 library(ggplot2);
 library(stringr); # for str_wrap
 library(gender);
+library(RTextTools);
+library(wordcloud);
 
 # Initialise
 d <- read.csv("summary_of_results_2015_app_round_160322.csv",
               stringsAsFactors = FALSE);
 load(file = "journals_2015.rda");
 journals <- journals[which(sapply(journals, length) < 100)];
+tdm <- as.data.frame(as.matrix(create_matrix(
+    d$Plain.Description,
+    language = "english",
+    removeStopwords = TRUE,
+    removeNumbers = TRUE,
+    stemWords = TRUE,
+    removeSparseTerms = 0.9))); 
+
 
 shinyServer(function(input, output, session) {
 
@@ -245,9 +255,31 @@ shinyServer(function(input, output, session) {
     })
 
     output$publicationsPerGrantPlotUI <- renderUI({
-        plotOutput("publicationsPerGrantPlot", height = input$canvasHeight)
+        plotOutput("publicationsPerGrantPlot", height = input$canvasHeight);
     })
 
+
+    output$wordcloudPlot <- renderPlot({
+        # Split data based on grant type and keep grant type categories
+        # with more than input$minFreq entries
+        data <- split(tdm, d$Grant.Type);
+#        if (input$minFreq > 0) {
+#            data <- data[sapply(data, function(x) nrow(x) > input$minFreq)];
+#        }
+        if (input$grantType != "All") {
+            freq <- colSums(data[[which(names(data) == input$grantType)]]);
+        } else {
+            freq <- colSums(tdm);
+        }
+        wordcloud(names(freq), freq, 
+                  min.freq = 3, max.words = 200, 
+                  colors = brewer.pal(8, "Dark2"),
+                  scale = c(8, 0.2));
+    })
+
+    output$wordcloudPlotUI <- renderUI({
+        plotOutput("wordcloudPlot", height = input$canvasHeight);
+        })
     
 })
 

@@ -14,17 +14,22 @@ shinyUI(pageWithSidebar(
     sidebarPanel(
         
         conditionalPanel(
-            condition = "input.conditionedPanels != 'Publications per grant type'",
+            condition = "input.conditionedPanels != 'Number of publications'",
             selectInput("grantType",
                     "Select grant type",
                     choices = c("All", sort(unique(d$Grant.Type))),
-                    selected = "Project Grants"),
+                    selected = "Project Grants")),
+        conditionalPanel(
+            condition = "input.conditionedPanels != 'Number of publications' & 
+                         input.conditionedPanels != 'Wordcloud of grant descriptions'",
             checkboxInput("asPercentage",
                           "Show values as percentage",
                           value = FALSE)),
-        numericInput("minFreq",
+        conditionalPanel(
+            condition = "input.conditionedPanels != 'Wordcloud of grant descriptions'",
+            numericInput("minFreq",
                      "Minimum frequency cutoff",
-                     value = 0),
+                     value = 0)),
         checkboxInput("extendedOptions",
                       "Show additional options",
                       value = FALSE),
@@ -71,6 +76,8 @@ shinyUI(pageWithSidebar(
             tabPanel("Number of publications",
                      uiOutput("publicationsPerGrantPlotUI")
                      ),
+            tabPanel("Wordcloud of grant descriptions",
+                     uiOutput("wordcloudPlotUI")),
             id = "conditionedPanels"
             ),
         width = 8
