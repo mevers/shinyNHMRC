@@ -32,6 +32,14 @@ Disclaimer: This is work-in-progress, and the result of my attempts to create (a
 
 * Publication data for every author is stored in the RData file `journals_2015.rda`. Originally, the idea was to profile publication data in real-time; this proved to be too slow. Instead the script [`getPubs.R`](getPubs.R) reads in CIA full names, converts them to a vector of searchstrings, and uses the R package [`RefManageR`](https://cran.r-project.org/web/packages/RefManageR/index.html) to extract publication records from PubMed for every author searchstring. See [`getPubs.R`](getPubs.R) for more details.
 
+### Ideas for improvements/additions
+
+* Analyse and visualise words in abstracts (term-document matrix, use `RTextTools` R package, see [GoodReads: Machine Learning (part 3)](https://www.r-bloggers.com/goodreads-machine-learning-part-3/))
+
+* Co-occurrence network analysis of keywords (use `network` R package, see [Turning keywords into a co-occurrence network](http://f.briatte.org/r/turning-keywords-into-a-co-occurrence-network))
+
+* Make plots more interactive: tooltips on hover (see [link](https://gitlab.com/snippets/16220)), plotly, d3, ...
+
 ### Author and licensing
 Author: [Maurits Evers](mailto:maurits.evers@anu.edu.au) 
 
