@@ -1,6 +1,7 @@
 library(shiny);
 library(RColorBrewer);
 library(ggplot2);
+library(plotly); # for interactive ggplot2
 library(stringr); # for str_wrap
 library(gender);
 library(RTextTools);
@@ -11,6 +12,8 @@ d <- read.csv("summary_of_results_2015_app_round_160322.csv",
               stringsAsFactors = FALSE);
 load(file = "journals_2015.rda");
 journals <- journals[which(sapply(journals, length) < 100)];
+
+# Create term-document matrix
 tdm <- as.data.frame(as.matrix(create_matrix(
     d$Plain.Description,
     language = "english",
@@ -35,7 +38,7 @@ shinyServer(function(input, output, session) {
         names(col) <- sort(unique(data$Admin.Institution));
         # Filter based on grant type
         if (input$grantType != "All") {
-            data <- data[which(d$Grant.Type == input$grantType), ];
+            data <- data[which(data$Grant.Type == input$grantType), ];
         }
         # Select institution from data and make frequency table
         df <- as.data.frame(table(data$Admin.Institution));
@@ -83,7 +86,7 @@ shinyServer(function(input, output, session) {
         names(col) <- c("female", "male", "unknown");
         # Filter based on grant type
         if (input$grantType != "All") {
-            data <- data[which(d$Grant.Type == input$grantType), ];
+            data <- data[which(data$Grant.Type == input$grantType), ];
         }
         # Genderise and add gender column to data
         firstname <- sapply(strsplit(data$CIA_Name, " "), function(x) x[2]);
@@ -129,7 +132,7 @@ shinyServer(function(input, output, session) {
         # Filter based on grant type
         data <- d;
         if (input$grantType != "All") {
-            data <- data[which(d$Grant.Type == input$grantType), ];
+            data <- data[which(data$Grant.Type == input$grantType), ];
         }
 
         # Select keywords from data
@@ -176,7 +179,7 @@ shinyServer(function(input, output, session) {
     output$publicationPlot <- renderPlot({
         data <- d;
         if (input$grantType != "All") {
-            data <- data[which(d$Grant.Type == input$grantType), ];
+            data <- data[which(data$Grant.Type == input$grantType), ];
         }
         # Select journals for relevant authors
         sel <- names(journals) %in% data$CIA_Name;
@@ -263,9 +266,6 @@ shinyServer(function(input, output, session) {
         # Split data based on grant type and keep grant type categories
         # with more than input$minFreq entries
         data <- split(tdm, d$Grant.Type);
-#        if (input$minFreq > 0) {
-#            data <- data[sapply(data, function(x) nrow(x) > input$minFreq)];
-#        }
         if (input$grantType != "All") {
             freq <- colSums(data[[which(names(data) == input$grantType)]]);
         } else {
@@ -281,5 +281,65 @@ shinyServer(function(input, output, session) {
         plotOutput("wordcloudPlot", height = input$canvasHeight);
         })
     
+
+    output$moneyPlot <- renderPlot({
+        # Remove NAs, N/As, and empty strings
+        keep <- which(
+            d[, "Start.Yr"] != "" &
+            d[, "Start.Yr"] != "NA" &
+            d[, "Start.Yr"] != "N/A");
+        data <- d[keep, ];
+        # Ensure dates are numeric
+        data[, "Start.Yr"] <- as.numeric(data[, "Start.Yr"]);
+        data[, "End.Yr"] <- as.numeric(data[, "End.Yr"]);
+        # Filter based on grant type
+        if (input$grantType != "All") {
+            data <- data[which(data$Grant.Type == input$grantType), ];
+        }
+        data$nPubs <- sapply(journals[match(data$CIA_Name, names(journals))], 
+                             length);
+        # Make dataframe of number of publications and total funding money
+        df <- cbind.data.frame(
+            x = data$nPubs,  
+            y = as.numeric(as.character(gsub("[\\$,]", "", data$Total))),
+            len = data[, "End.Yr"] - data[, "Start.Yr"] + 1,
+            grp = sprintf("%i yr", data[, "End.Yr"] - data[, "Start.Yr"] + 1));
+        # Ensure funding duration is a factor with the correct levels
+        df$grp <- factor(df$grp, levels = sprintf("%i yr", seq(1, 5)));
+        # Funding mony per annum per A$100k 
+        df$y <- df$y / df$len / 1e5;
+        if (input$missingPubsAsZero == FALSE) {
+            df <- df[which(df$x > 0), ];
+        }
+        if (nrow(df) < 2) return(NULL);
+        # Perform linear model fit and extract coefficients
+        fit <- lm(y ~ x, data = df);
+        coef <- coefficients(summary(fit));
+        title <- c(sprintf("Slope = %3.2e", coef[2, 1]),
+                   sprintf("se(slope) = %3.2e", coef[2, 2]),
+                   sprintf("offset = %3.2e", coef[1, 1]),
+                   sprintf("se(offset) = %3.2e", coef[2, 1]));
+        title <- paste(title, collapse = ", ");
+        # Plot
+        gg <- ggplot(df, aes(x = x, y = y));
+        gg <- gg + geom_point(aes(size = grp), shape = 1);
+        gg <- gg + geom_smooth(method = lm, fill = "blue", alpha = 0.2);
+        gg <- gg + xlab("Number of publications");
+        gg <- gg + ylab("Total funding money (in A$100k) p.a.");
+        gg <- gg + theme_bw();
+        gg <- gg + theme(axis.text = element_text(size = input$fontLabel),
+                         axis.title.x = element_text(size = input$fontAxes),
+                         axis.title.y = element_text(size = input$fontAxes));
+        gg <- gg + ggtitle(title);
+        gg <- gg + theme(plot.title = element_text(hjust = 0, size = 16));
+        gg <- gg + scale_size_discrete(name = "Funding period in years");
+        gg <- gg + theme(legend.position="bottom", legend.key = element_blank());
+        print(gg);
+        })
+
+
+    output$moneyPlotUI <- renderUI({
+        plotOutput("moneyPlot", height = input$canvasHeight);
+        })
 })
 
