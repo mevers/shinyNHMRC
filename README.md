@@ -19,7 +19,7 @@ Disclaimer: This is work-in-progress, and the result of my attempts to create (a
     runApp(".");
     ``` 
 
-4. The app depends on the additional R packages: `RColorBrewer, ggplot2, stringr, gender`. 
+4. The app depends on the additional R packages: `RColorBrewer, ggplot2, stringr, gender, RTextTools, wordcloud`. 
 
     Please note: Upon installing the package `gender` for the first time, it will attempt to download additional data. This requires some user input.
 
