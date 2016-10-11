@@ -1,11 +1,11 @@
 library(shiny);
 library(RColorBrewer);
 library(ggplot2);
-library(plotly); # for interactive ggplot2
 library(stringr); # for str_wrap
 library(gender);
 library(RTextTools);
 library(wordcloud);
+#library(ggiraph);
 
 # Initialise
 d <- read.csv("summary_of_results_2015_app_round_160322.csv",
@@ -303,7 +303,8 @@ shinyServer(function(input, output, session) {
             x = data$nPubs,  
             y = as.numeric(as.character(gsub("[\\$,]", "", data$Total))),
             len = data[, "End.Yr"] - data[, "Start.Yr"] + 1,
-            grp = sprintf("%i yr", data[, "End.Yr"] - data[, "Start.Yr"] + 1));
+            grp = sprintf("%i yr", data[, "End.Yr"] - data[, "Start.Yr"] + 1),
+			cia = data$CIA_Name);
         # Ensure funding duration is a factor with the correct levels
         df$grp <- factor(df$grp, levels = sprintf("%i yr", seq(1, 5)));
         # Funding mony per annum per A$100k 
@@ -334,7 +335,7 @@ shinyServer(function(input, output, session) {
         gg <- gg + theme(plot.title = element_text(hjust = 0, size = 16));
         gg <- gg + scale_size_discrete(name = "Funding period in years");
         gg <- gg + theme(legend.position="bottom", legend.key = element_blank());
-        print(gg);
+		print(gg));
         })
 
 

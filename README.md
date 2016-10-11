@@ -19,7 +19,7 @@ Disclaimer: This is work-in-progress, and the result of my attempts to create (a
     runApp(".");
     ``` 
 
-4. The app depends on the additional R packages: `RColorBrewer, ggplot2, stringr, gender, RTextTools, wordcloud`. 
+4. The app depends on the additional R packages: `gender, ggiraph, ggplot2, gender, RColorBrewer, RTextTools, stringr, wordcloud`. 
 
     Please note: Upon installing the package `gender` for the first time, it will attempt to download additional data. This requires some user input.
 
@@ -38,11 +38,11 @@ Disclaimer: This is work-in-progress, and the result of my attempts to create (a
 
 * Co-occurrence network analysis of keywords (use `network` R package, see [Turning keywords into a co-occurrence network](http://f.briatte.org/r/turning-keywords-into-a-co-occurrence-network))
 
-* Make plots more interactive: tooltips on hover (see [link](https://gitlab.com/snippets/16220)), plotly, d3, ...
+* Make plots more interactive: tooltips on hover (see [link](https://gitlab.com/snippets/16220)), plotly, d3, ggiraph, ...
 
 ### Author and licensing
 Author: [Maurits Evers](mailto:maurits.evers@anu.edu.au) 
 
-Date: 30 September 2016
+Date: 10 October 2016
 
 License: GPLv3
